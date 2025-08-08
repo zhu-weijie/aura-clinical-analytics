@@ -1,17 +1,20 @@
 import time
 from aura.simulation.simulator import generate_clinical_data
+from aura.messaging.producer import initialize_producer, send_to_kafka
 
 
 def run_app():
-    print("AURA: Starting real-time clinical data simulation...")
+    initialize_producer()
+
+    print("AURA: Starting data production...")
 
     try:
         while True:
             data_record = generate_clinical_data()
-            print(data_record)
+            send_to_kafka(data_record)
             time.sleep(2)
     except KeyboardInterrupt:
-        print("\nSimulation stopped.")
+        print("\nProducer stopped.")
 
 
 if __name__ == "__main__":
