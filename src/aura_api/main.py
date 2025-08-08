@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-
-
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter
 from aura.model.predictor import predict_patient_risk
 
 app = FastAPI(title="AURA Prediction API")
+Instrumentator().instrument(app).expose(app)
+PREDICTIONS_TOTAL = Counter(
+    "aura_predictions_total", "Total number of patient risk predictions made."
+)
 
 
 class ClinicalData(BaseModel):
@@ -22,5 +26,6 @@ def read_root():
 
 @app.post("/predict")
 def predict(data: ClinicalData):
+    PREDICTIONS_TOTAL.inc()
     prediction = predict_patient_risk(data.dict())
     return prediction

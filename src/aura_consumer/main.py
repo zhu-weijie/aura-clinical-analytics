@@ -11,6 +11,30 @@ KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC")
 PREDICTION_API_URL = os.environ.get("PREDICTION_API_URL")
 
 
+def wait_for_api():
+    retry_count = 0
+    max_retries = 15
+    retry_delay_seconds = 3
+    api_root_url = PREDICTION_API_URL.replace("/predict", "")
+
+    print(f"Consumer: Waiting for API service to be ready at {api_root_url}...")
+    while retry_count < max_retries:
+        try:
+            response = requests.get(api_root_url)
+            if response.status_code == 200:
+                print("Consumer: API service is ready!")
+                return
+        except requests.exceptions.ConnectionError:
+            pass
+
+        retry_count += 1
+        print(f"Consumer: API not ready. Retrying... ({retry_count}/{max_retries})")
+        time.sleep(retry_delay_seconds)
+
+    print("Consumer: Could not connect to API service. Exiting.")
+    sys.exit(1)
+
+
 def create_consumer():
     retry_count = 0
     max_retries = 10
@@ -22,8 +46,8 @@ def create_consumer():
             consumer = KafkaConsumer(
                 KAFKA_TOPIC,
                 bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-                auto_offset_reset="earliest",  # Start reading at the earliest message
-                group_id="aura-risk-assessors",  # Consumer group ID
+                auto_offset_reset="earliest",
+                group_id="aura-risk-assessors",
                 value_deserializer=lambda x: json.loads(x.decode("utf-8")),
             )
             print("Consumer: Successfully connected to Kafka!")
@@ -44,9 +68,8 @@ def process_messages(consumer):
     for message in consumer:
         clinical_data = message.value
         try:
-            # Call the prediction API
             response = requests.post(PREDICTION_API_URL, json=clinical_data)
-            response.raise_for_status()  # Raise an exception for bad status codes
+            response.raise_for_status()
             prediction = response.json()
 
             print(f"Prediction Received: {prediction}")
@@ -58,5 +81,7 @@ def process_messages(consumer):
 
 
 if __name__ == "__main__":
+    wait_for_api()
+
     kafka_consumer = create_consumer()
     process_messages(kafka_consumer)
