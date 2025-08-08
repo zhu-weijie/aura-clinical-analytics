@@ -1,0 +1,14 @@
+[project]
+name = "aura-clinical-analytics"
+version = "0.1.0"
+description = "A real-time clinical analytics and alerting system."
+authors = [
+    { name = "zhuweijie", email = "zhuweijie16@gmail.com" },
+]
+requires-python = ">=3.12"
+dependencies = [
+    # Dependencies will be added here in future issues
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
