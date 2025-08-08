@@ -46,5 +46,6 @@ def send_to_kafka(data: dict):
     try:
         producer.send(KAFKA_TOPIC, value=data)
         producer.flush()
+        print(f"Sent to Kafka: {data}")
     except Exception as e:
         print(f"Error sending to Kafka: {e}")
