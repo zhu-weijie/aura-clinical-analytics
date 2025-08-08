@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+COPY pyproject.toml .
+COPY ./src/aura ./src/aura
+RUN pip install -e .
+
+COPY ./src/aura_api ./src/aura_api
+
+CMD ["uvicorn", "src.aura_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
