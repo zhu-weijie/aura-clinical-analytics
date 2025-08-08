@@ -1,0 +1,35 @@
+{
+    "__inputs": [],
+    "__requires": [],
+    "annotations": { "list": [] },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+      {
+        "datasource": { "type": "prometheus", "uid": "Prometheus" },
+        "title": "Total Predictions",
+        "type": "stat",
+        "fieldConfig": {
+          "defaults": { "color": { "mode": "thresholds" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 80 } ] } },
+          "overrides": []
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "options": { "reduceOptions": { "calcs": [ "lastNotNull" ], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto" },
+        "targets": [ { "expr": "aura_predictions_total", "legendFormat": "Total Predictions" } ]
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [],
+    "templating": { "list": [] },
+    "time": { "from": "now-5m", "to": "now" },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "AURA Clinical Analytics",
+    "uid": "aura-dashboard",
+    "version": 1
+}
