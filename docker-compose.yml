@@ -1,0 +1,7 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aura-app
+    command: python -m aura.main
