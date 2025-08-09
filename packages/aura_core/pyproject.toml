@@ -8,5 +8,8 @@ dependencies = [
     "joblib==1.5.1"
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
