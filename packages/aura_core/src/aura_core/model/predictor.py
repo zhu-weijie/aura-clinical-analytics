@@ -1,23 +1,37 @@
 # packages/aura_core/src/aura_core/model/predictor.py
 import joblib
 import pandas as pd
-import os
+import importlib.resources  # Use the modern, correct library for package data
 
-# --- Model Loading ---
-# Construct the path to the model file
-# The model file will be placed in the same directory as this script in the Docker container
-MODEL_DIR = os.path.dirname(__file__)
-MODEL_PATH = os.path.join(MODEL_DIR, "aura_risk_model.joblib")
 
-# Load the model once when the module is imported
-try:
-    model = joblib.load(MODEL_PATH)
-    print("Successfully loaded ML model from", MODEL_PATH)
-except FileNotFoundError:
-    print(
-        f"Error: Model file not found at {MODEL_PATH}. Make sure it's copied into the Docker image."
-    )
-    model = None
+# --- Model Loading using importlib.resources ---
+def _load_model():
+    """Loads the model using a reliable path within the package."""
+    try:
+        # 'files()' gets a traversable object for the specified package.
+        # We specify the sub-package 'aura_core.model.assets'.
+        # Then, we join the path to our model file.
+        model_resource = importlib.resources.files("aura_core.model.assets").joinpath(
+            "aura_risk_model.joblib"
+        )
+
+        # 'as_file()' is a context manager that provides a real filesystem path for the resource.
+        with importlib.resources.as_file(model_resource) as model_path:
+            print(f"Attempting to load ML model from filesystem path: {model_path}")
+            model = joblib.load(model_path)
+            print("Successfully loaded ML model.")
+            return model
+
+    except (FileNotFoundError, ModuleNotFoundError) as e:
+        # This will now give us a much clearer error if the file is not found
+        print(
+            f"CRITICAL ERROR: Could not find or load model file via importlib.resources. Error: {e}"
+        )
+        return None
+
+
+# Load the model once when this module is first imported.
+model = _load_model()
 
 
 def predict_patient_risk(clinical_data: dict) -> dict:
@@ -25,10 +39,10 @@ def predict_patient_risk(clinical_data: dict) -> dict:
     Predicts patient risk using the loaded scikit-learn model.
     """
     if model is None:
-        return {"error": "Model not loaded"}
+        return {"error": "Model not loaded. Check startup logs for errors."}
 
     try:
-        # Prepare data for the model (must match training format)
+        # Prepare data for the model
         input_df = pd.DataFrame(
             [
                 {

@@ -10,8 +10,6 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 COPY ./packages/aura_core /app/packages/aura_core
 RUN pip install -e ./packages/aura_core
 
-COPY aura_risk_model.joblib /app/packages/aura_core/src/aura_core/model/
-
 COPY ./src/aura_api ./src/aura_api
 COPY pyproject.toml . 
 

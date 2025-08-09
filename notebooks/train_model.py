@@ -25,7 +25,7 @@ accuracy = model.score(X_test, y_test)
 print(f"Model Accuracy: {accuracy:.2f}")
 
 
-model_filename = "aura_risk_model.joblib"
+model_filename = "packages/aura_core/src/aura_core/model/assets/aura_risk_model.joblib"
 joblib.dump(model, model_filename)
-print(f"Model saved as '{model_filename}'")
+print(f"Model saved to '{model_filename}'")
 print("--- Model Training Complete ---")
