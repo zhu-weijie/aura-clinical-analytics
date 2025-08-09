@@ -1,8 +1,12 @@
-# packages/aura_core/pyproject.toml
 [project]
 name = "aura-core"
 version = "0.1.0"
 requires-python = ">=3.12"
+dependencies = [
+    "scikit-learn==1.7.1",
+    "pandas==2.3.1",
+    "joblib==1.5.1"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
