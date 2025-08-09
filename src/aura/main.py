@@ -1,5 +1,7 @@
 import time
-from aura.simulation.simulator import generate_clinical_data
+
+
+from aura_core.simulation.simulator import generate_clinical_data
 from aura.messaging.producer import initialize_producer, send_to_kafka
 
 
