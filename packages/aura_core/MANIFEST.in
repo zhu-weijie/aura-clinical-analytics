@@ -1,0 +1,3 @@
+# This command tells the packager to recursively include
+# everything inside the 'assets' directory.
+graft src/aura_core/model/assets
