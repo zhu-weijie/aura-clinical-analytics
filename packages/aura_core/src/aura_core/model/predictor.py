@@ -14,8 +14,11 @@ try:
     model = joblib.load(MODEL_PATH)
     print("Successfully loaded ML model from", MODEL_PATH)
 except FileNotFoundError:
-    print(f"Error: Model file not found at {MODEL_PATH}. Make sure it's copied into the Docker image.")
+    print(
+        f"Error: Model file not found at {MODEL_PATH}. Make sure it's copied into the Docker image."
+    )
     model = None
+
 
 def predict_patient_risk(clinical_data: dict) -> dict:
     """
@@ -26,10 +29,14 @@ def predict_patient_risk(clinical_data: dict) -> dict:
 
     try:
         # Prepare data for the model (must match training format)
-        input_df = pd.DataFrame([{
-            "heart_rate": clinical_data.get("heart_rate", 75),
-            "spo2": clinical_data.get("spo2", 0.98)
-        }])
+        input_df = pd.DataFrame(
+            [
+                {
+                    "heart_rate": clinical_data.get("heart_rate", 75),
+                    "spo2": clinical_data.get("spo2", 0.98),
+                }
+            ]
+        )
 
         # Make prediction
         prediction = model.predict(input_df)[0]
@@ -41,7 +48,7 @@ def predict_patient_risk(clinical_data: dict) -> dict:
         return {
             "patient_id": clinical_data.get("patient_id"),
             "risk_level": risk_level,
-            "score": round(score, 3)
+            "score": round(score, 3),
         }
     except Exception as e:
         return {"error": str(e)}
