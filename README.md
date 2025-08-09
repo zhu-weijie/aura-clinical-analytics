@@ -97,3 +97,186 @@ Once the application is running, the services are available at:
 *   **Prediction API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 *   **Prometheus UI:** [http://localhost:9090](http://localhost:9090)
 *   **Grafana Dashboard:** [http://localhost:3000](http://localhost:3000) (Login: `admin` / `admin`)
+
+### Design Diagrams
+
+#### Class Diagram
+
+```mermaid
+classDiagram
+    direction LR
+
+    class Consumer {
+      +run_app()
+      +process_messages()
+      +wait_for_api()
+    }
+    
+    class Producer {
+      +run_app()
+      +send_to_kafka(data)
+    }
+
+    class Simulator {
+      +generate_clinical_data()
+    }
+
+    class PredictionAPI {
+      <<FastAPI>>
+      +predict(data: ClinicalData)
+      +summarize(note: ClinicalNote)
+    }
+
+    class Predictor {
+      <<ML Model>>
+      -model: LogisticRegression
+      +predict_patient_risk(data)
+    }
+
+    class Summarizer {
+      <<LLM>>
+      -pipeline: SummarizationPipeline
+      +summarize_note(text)
+    }
+
+    class ClinicalData {
+      <<Pydantic Model>>
+      +patient_id: str
+      +heart_rate: int
+      +spo2: float
+    }
+
+    class ClinicalNote {
+      <<Pydantic Model>>
+      +patient_id: str
+      +note_text: str
+    }
+
+    Consumer ..> PredictionAPI : "Makes HTTP Request"
+    Producer ..> Simulator : "Uses"
+    PredictionAPI --* Predictor : "Composition"
+    PredictionAPI --* Summarizer : "Composition"
+    PredictionAPI ..> ClinicalData : "Validates"
+    PredictionAPI ..> ClinicalNote : "Validates"
+```
+
+#### Entity Relationship Diagram
+
+```mermaid
+erDiagram
+
+    subgraph "Use Case: Risk Prediction"
+        ClinicalDataInput {
+            string patient_id
+            string timestamp
+            int heart_rate
+            string blood_pressure
+            float spo2
+        }
+        PredictionResult {
+            string patient_id
+            string risk_level
+            float score
+        }
+    end
+
+    subgraph "Use Case: Summarization"
+        SummarizationInput {
+            string patient_id
+            string note_text
+        }
+        SummarizationResult {
+            string patient_id
+            int original_note_length
+            string summary
+            int summary_length
+        }
+    end
+
+    ClinicalDataInput ||--|{ PredictionResult : "yields"
+    SummarizationInput ||--|{ SummarizationResult : "yields"
+```
+
+#### Real-Time Risk Prediction Flow
+
+```mermaid
+sequenceDiagram
+    participant Producer
+    participant Kafka
+    participant Consumer
+    participant PredictionAPI
+    participant Prometheus
+
+    par Producer Workflow
+        loop Every 2 seconds
+            Producer->>Kafka: send(clinical_data)
+        end
+    and Consumer Workflow
+        loop Continuously
+            Consumer->>Kafka: poll() for new messages
+            Consumer->>PredictionAPI: POST /predict (clinical_data)
+            activate PredictionAPI
+            PredictionAPI->>PredictionAPI: predict_patient_risk()
+            PredictionAPI->>PredictionAPI: PREDICTIONS_TOTAL.inc()
+            PredictionAPI-->>Consumer: 200 OK (prediction_json)
+            deactivate PredictionAPI
+            Consumer->>Consumer: Log "HIGH_RISK_ALERT" or "Prediction Received"
+        end
+    and Monitoring Workflow
+        loop Every 15 seconds
+            Prometheus->>PredictionAPI: GET /metrics
+            activate PredictionAPI
+            PredictionAPI-->>Prometheus: 200 OK (metrics payload)
+            deactivate PredictionAPI
+        end
+    end
+```
+
+#### LLM Summarization Flow
+
+```mermaid
+sequenceDiagram
+    participant User/Client
+    participant PredictionAPI
+    participant Prometheus
+
+    par Synchronous API Call
+        User/Client->>PredictionAPI: POST /summarize (clinical_note)
+        activate PredictionAPI
+        PredictionAPI->>PredictionAPI: summarize_note()
+        PredictionAPI->>PredictionAPI: LLM_SUMMARIZATIONS_TOTAL.inc()
+        PredictionAPI-->>User/Client: 200 OK (summary_json)
+        deactivate PredictionAPI
+    and Monitoring Workflow
+        loop Every 15 seconds
+            Prometheus->>PredictionAPI: GET /metrics
+            activate PredictionAPI
+            PredictionAPI-->>Prometheus: 200 OK (metrics payload)
+            deactivate PredictionAPI
+        end
+    end
+```
+
+### CI Diagram
+
+```mermaid
+graph TD
+    subgraph Setup Environment
+        A["Start: Manual Trigger"] --> B["Checkout Source Code"];
+        B --> C["Set up Python 3.12 Environment"];
+        C --> D["Install All Python Dependencies"];
+        D --> E["Install Local Project Packages"];
+    end
+
+    subgraph Validate Code
+        F["Train Machine Learning Model"] --> G["Execute Pytest Suite"];
+    end
+
+    subgraph Conclude
+        H{"All Tests Passed?"} -- Yes --> I["✅ Success"];
+        H -- No --> J["❌ Failure"];
+    end
+
+    E --> F;
+    G --> H;
+```
